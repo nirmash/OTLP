@@ -1,5 +1,6 @@
 """FastAPI app — OTLP HTTP receiver + viewer UI."""
 
+import logging
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -12,6 +13,8 @@ from backend.otlp import (
 )
 
 app = FastAPI(title="OTLP HTTP Receiver")
+logger = logging.getLogger("otlp_receiver")
+logging.basicConfig(level=logging.INFO)
 
 
 def _content_type(request: Request) -> str:
@@ -49,7 +52,9 @@ async def ingest_metrics(request: Request):
 async def ingest_logs(request: Request):
     body = await request.body()
     ct = _content_type(request)
+    logger.info("POST /v1/logs ct=%s body_len=%d", ct, len(body))
     resource_logs = decode_logs(body, ct)
+    logger.info("decoded %d resource_logs", len(resource_logs))
     store.add_logs(resource_logs)
     return Response(
         content=encode_logs_response(ct),
