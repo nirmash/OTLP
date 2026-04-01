@@ -113,7 +113,7 @@ Open the Grafana UI and explore the Prometheus datasource — all metrics are pr
 
 | Component | URL |
 |-----------|-----|
-| OTLP Receiver | https://production-otlp-2fa05823.app.embr.azure |
+| OTLP Receiver | https://production-otlp-00229c32.app.embr.azure |
 | Prometheus | https://production-prometheus-embr-1a780423.app.embr.azure |
 | Grafana | https://production-grafana-embr-a006bc91.app.embr.azure |
 | Notes App | https://production-simple-python-notes-app-55dceb21.app.embr.azure |
