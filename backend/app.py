@@ -108,3 +108,8 @@ async def index():
 @app.get("/viz.html")
 async def viz():
     return FileResponse("static/viz.html")
+
+
+@app.get("/viz2.html")
+async def viz2():
+    return FileResponse("static/viz2.html")
