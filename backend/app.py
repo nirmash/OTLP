@@ -147,3 +147,11 @@ async def arch():
         "Pragma": "no-cache",
         "Expires": "0",
     })
+
+
+@app.get("/live.html")
+async def live():
+    return FileResponse("static/live.html", headers={
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+    })
