@@ -1,5 +1,6 @@
-"""FastAPI app — OTLP HTTP receiver + viewer UI."""
+"""FastAPI app — OTLP HTTP receiver + architecture visualization."""
 
+import httpx
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -81,6 +82,17 @@ async def get_stats():
 async def clear_store():
     store.clear()
     return {"status": "cleared"}
+
+
+# ── Prometheus proxy (avoids CORS) ──────────────────────────────────
+
+PROMETHEUS_URL = "https://production-prometheus-embr-1a780423.app.embr.azure"
+
+@app.get("/api/prometheus")
+async def prometheus_query(query: str = "up"):
+    async with httpx.AsyncClient(verify=False, timeout=10) as client:
+        resp = await client.get(f"{PROMETHEUS_URL}/api/v1/query", params={"query": query})
+        return Response(content=resp.content, media_type="application/json")
 
 
 # ── Static UI ───────────────────────────────────────────────────────
