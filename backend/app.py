@@ -155,3 +155,10 @@ async def live():
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
         "Pragma": "no-cache",
     })
+
+
+@app.get("/dash.html")
+async def dash():
+    return FileResponse("static/dash.html", headers={
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    })
