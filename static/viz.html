@@ -144,8 +144,8 @@ const CONNECTIONS = [
   {from:'n-prom',       to:'n-grafana',    color:'var(--orange)', label:'PromQL',       bidir:false, rateQuery:null},
 ];
 
-let connRates = {};  // keyed by index, stores last rate value
-let prevTraces = null;
+let connRates = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0};
+let prevTraces = 0;
 let prevMetricSnapshot = {};
 
 function getCenter(id) {
@@ -280,10 +280,13 @@ async function promQuery(q) {
     const r = await fetch(`/api/prometheus?query=${encodeURIComponent(q)}`);
     const d = await r.json();
     const results = d?.data?.result || [];
-    if (results.length === 0) return null;
-    if (results.length === 1) return parseFloat(results[0].value[1]);
+    if (results.length === 0) return 0;
+    if (results.length === 1) {
+      const v = parseFloat(results[0].value[1]);
+      return isNaN(v) ? 0 : v;
+    }
     return results;
-  } catch { return null; }
+  } catch { return 0; }
 }
 
 function fmt(n) { return n != null && !isNaN(n) ? Math.round(n).toLocaleString() : '—'; }
@@ -332,16 +335,19 @@ async function refresh() {
   document.getElementById('v-mem').textContent = fmtBytes(mem);
   document.getElementById('v-traces').textContent = fmt(traces.traces);
 
-  // Determine which connections are active (have real data flowing)
-  const tracesChanged = prevTraces !== null && traces.traces !== prevTraces;
+  // Determine which connections are active (have real data flowing right now)
+  // chatRate and selRate are from rate()[5m] — only > 0 if requests happened recently
+  const cr = typeof chatRate === 'number' && chatRate > 0.001 ? chatRate : 0;
+  const sr = typeof selRate === 'number' && selRate > 0.001 ? selRate : 0;
+  const tracesChanged = prevTraces !== null && prevTraces > 0 && traces.traces !== prevTraces;
   prevTraces = traces.traces;
 
-  connRates[0] = (chatRate && chatRate > 0) ? chatRate : 0;  // browser→app
-  connRates[1] = (chatRate && chatRate > 0) ? chatRate : 0;  // app→agent
-  connRates[2] = (selRate && selRate > 0) ? selRate : 0;     // app→db
-  connRates[3] = tracesChanged ? 1 : 0;                       // app→otlp
-  connRates[4] = (chatRate && chatRate > 0) ? chatRate : 0;  // app→prom (metrics always flow with requests)
-  connRates[5] = connRates[4];                                // prom→grafana
+  connRates[0] = cr;   // browser→app
+  connRates[1] = cr;   // app→agent
+  connRates[2] = sr;   // app→db
+  connRates[3] = tracesChanged ? 1 : 0;  // app→otlp
+  connRates[4] = cr;   // app→prom
+  connRates[5] = cr;   // prom→grafana
 
   drawConnections();
 
