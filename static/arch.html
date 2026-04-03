@@ -48,7 +48,7 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
 <body>
 <header>
   <h1>🏗️ <span>Home Finder</span> — System Architecture</h1>
-  <div class="status"><span class="dot"></span>Live — deploy-ARCH6 — polling every 3s</div>
+  <div class="status"><span class="dot"></span>Live — deploy-ARCH7 — polling every 3s</div>
 </header>
 
 <div class="canvas-wrap" id="canvas">
@@ -360,24 +360,42 @@ async function refresh() {
 
   drawConnections();
 
-  // Activity feed
+  // Activity feed — built from Prometheus metrics
   try {
-    const tr = await fetch('/api/telemetry?kind=traces&limit=10');
-    const data = await tr.json();
     const feed = document.getElementById('feed-items');
-    document.getElementById('feed-count').textContent = `${traces.traces} total traces`;
-    feed.innerHTML = data.items.reverse().map(item => {
-      const svc = (item.data?.resource?.attributes||[]).find(a=>a.key==='service.name')?.value?.string_value || '?';
-      const scopes = item.data?.scope_spans || [];
-      let spans = [];
-      for(const s of scopes) for(const sp of (s.spans||[])) spans.push(sp);
-      return spans.slice(0,3).map(sp => {
-        const dur = sp.end_time_unix_nano && sp.start_time_unix_nano
-          ? ((parseInt(sp.end_time_unix_nano)-parseInt(sp.start_time_unix_nano))/1e6).toFixed(0)+'ms' : '';
-        const t = item.received_at?.split('T')[1]?.split('.')[0] || '';
-        return `<div class="feed-item"><span class="time">${t}</span><span class="svc">${svc}</span><span class="name">${sp.name||'?'}</span><span class="dur">${dur}</span></div>`;
-      }).join('');
-    }).join('');
+    const selByCity = await promQuery('home_selections_total');
+    const errByType = await promQuery('app_errors_total');
+    
+    let items = [];
+    const now = new Date().toISOString().split('T')[1].split('.')[0];
+    
+    // Show current metrics as activity
+    if (total > 0) items.push({time: now, svc: 'Home Finder', name: `${fmt(total)} chat requests (${fmt(chatOk)} ok, ${fmt(chatErr)} err)`, color: 'var(--blue)'});
+    if (latency > 0) items.push({time: now, svc: 'Foundry Agent', name: `Avg response: ${fmtMs(latency)}`, color: 'var(--orange)'});
+    
+    if (Array.isArray(selByCity)) {
+      for (const r of selByCity) {
+        const city = r.metric?.home_city || '?';
+        const cnt = r.value?.[1] || '0';
+        items.push({time: now, svc: 'PostgreSQL', name: `${city}: ${cnt} selections`, color: 'var(--green)'});
+      }
+    }
+    
+    if (Array.isArray(errByType)) {
+      for (const r of errByType) {
+        const typ = r.metric?.error_type || '?';
+        const msg = r.metric?.error_message || '';
+        const cnt = r.value?.[1] || '0';
+        items.push({time: now, svc: 'Error', name: `${typ} (×${cnt}): ${msg.slice(0,60)}`, color: 'var(--red)'});
+      }
+    }
+    
+    if (cpu > 0) items.push({time: now, svc: 'Platform', name: `CPU: ${cpu.toFixed(3)} cores | Mem: ${fmtBytes(mem)}`, color: 'var(--purple)'});
+    
+    document.getElementById('feed-count').textContent = `${items.length} metrics`;
+    feed.innerHTML = items.map(i => 
+      `<div class="feed-item"><span class="time">${i.time}</span><span class="svc" style="color:${i.color}">${i.svc}</span><span class="name">${i.name}</span></div>`
+    ).join('');
   } catch {}
 }
 
