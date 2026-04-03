@@ -103,3 +103,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
 async def index():
     return FileResponse("static/index.html")
+
+
+@app.get("/viz.html")
+async def viz():
+    return FileResponse("static/viz.html")
