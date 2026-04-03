@@ -92,7 +92,11 @@ PROMETHEUS_URL = "https://production-prometheus-embr-1a780423.app.embr.azure"
 async def prometheus_query(query: str = "up"):
     async with httpx.AsyncClient(verify=False, timeout=10) as client:
         resp = await client.get(f"{PROMETHEUS_URL}/api/v1/query", params={"query": query})
-        return Response(content=resp.content, media_type="application/json")
+        return Response(
+            content=resp.content,
+            media_type="application/json",
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+        )
 
 
 # ── Static UI ───────────────────────────────────────────────────────

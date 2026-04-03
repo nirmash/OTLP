@@ -45,7 +45,7 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
 <body>
 <header>
   <h1>🏗️ <span>Home Finder</span> — System Architecture</h1>
-  <div class="status"><span class="dot"></span>Live — deploy-182546 — polling every 3s</div>
+  <div class="status"><span class="dot"></span>Live — deploy-v4 — polling every 3s</div>
 </header>
 
 <div class="canvas-wrap" id="canvas">
@@ -136,9 +136,9 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
 <script>
 // ── Connections: direction and data-driven animation ────────────────
 const CONNECTIONS = [
-  {from:'n-browser',    to:'n-homefinder', color:'var(--blue)',   label:'HTTP',         bidir:true,  rateQuery:'sum(rate(chat_requests_total[5m]))'},
-  {from:'n-homefinder', to:'n-agent',      color:'var(--blue)',   label:'OpenAI API',   bidir:true,  rateQuery:'sum(rate(chat_requests_total[5m]))'},
-  {from:'n-homefinder', to:'n-db',         color:'var(--green)',  label:'SQL',          bidir:true,  rateQuery:'sum(rate(home_selections_total[5m]))'},
+  {from:'n-browser',    to:'n-homefinder', color:'var(--blue)',   label:'HTTP',         bidir:true,  rateQuery:'sum(rate(chat_requests_total[1m]))'},
+  {from:'n-homefinder', to:'n-agent',      color:'var(--blue)',   label:'OpenAI API',   bidir:true,  rateQuery:'sum(rate(chat_requests_total[1m]))'},
+  {from:'n-homefinder', to:'n-db',         color:'var(--green)',  label:'SQL',          bidir:true,  rateQuery:'sum(rate(home_selections_total[1m]))'},
   {from:'n-homefinder', to:'n-otlp',       color:'var(--purple)', label:'OTLP Traces',  bidir:false, rateQuery:null},
   {from:'n-homefinder', to:'n-prom',       color:'var(--green)',  label:'OTLP Metrics', bidir:false, rateQuery:null},
   {from:'n-prom',       to:'n-grafana',    color:'var(--orange)', label:'PromQL',       bidir:false, rateQuery:null},
@@ -277,7 +277,7 @@ function drawConnections() {
 // ── Data ────────────────────────────────────────────────────────────
 async function promQuery(q) {
   try {
-    const r = await fetch(`/api/prometheus?query=${encodeURIComponent(q)}`);
+    const r = await fetch(`/api/prometheus?_t=${Date.now()}&query=${encodeURIComponent(q)}`);
     const d = await r.json();
     const results = d?.data?.result || [];
     if (results.length === 0) return 0;
@@ -310,8 +310,8 @@ async function refresh() {
     promQuery('sandbox_memory_usage_bytes'),
     fetch('/api/stats').then(r=>r.json()).catch(()=>({traces:0})),
     promQuery('sum(chat_requests_total)'),
-    promQuery('sum(rate(chat_requests_total[5m]))'),
-    promQuery('sum(rate(home_selections_total[5m]))'),
+    promQuery('sum(rate(chat_requests_total[1m]))'),
+    promQuery('sum(rate(home_selections_total[1m]))'),
   ]);
 
   // Compute success rate properly
@@ -348,6 +348,7 @@ async function refresh() {
   connRates[3] = tracesChanged ? 1 : 0;  // app→otlp
   connRates[4] = cr;   // app→prom
   connRates[5] = cr;
+  drawConnections();
   console.log("connRates:", JSON.stringify(connRates), "chatRate:", chatRate, "selRate:", selRate);   // prom→grafana
 
   drawConnections();
