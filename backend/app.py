@@ -1,6 +1,8 @@
 """FastAPI app — OTLP HTTP receiver + architecture visualization."""
 
-import httpx
+import ssl
+import json as json_mod
+import urllib.request
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -92,12 +94,23 @@ PROMETHEUS_URL = "https://production-prometheus-embr-1a780423.app.embr.azure"
 async def prometheus_query(request: Request):
     body = await request.json()
     query = body.get("query", "up")
-    async with httpx.AsyncClient(verify=False, timeout=10) as client:
-        resp = await client.get(f"{PROMETHEUS_URL}/api/v1/query", params={"query": query})
+    try:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        url = f"{PROMETHEUS_URL}/api/v1/query?query={urllib.request.quote(query)}"
+        req = urllib.request.Request(url)
+        resp = urllib.request.urlopen(req, timeout=10, context=ctx)
+        content = resp.read()
         return Response(
-            content=resp.content,
+            content=content,
             media_type="application/json",
             headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+        )
+    except Exception as e:
+        return Response(
+            content=json_mod.dumps({"status": "error", "data": {"result": []}, "error": str(e)}),
+            media_type="application/json",
         )
 
 
