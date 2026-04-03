@@ -88,8 +88,10 @@ async def clear_store():
 
 PROMETHEUS_URL = "https://production-prometheus-embr-1a780423.app.embr.azure"
 
-@app.get("/api/prometheus")
-async def prometheus_query(query: str = "up"):
+@app.post("/api/prometheus")
+async def prometheus_query(request: Request):
+    body = await request.json()
+    query = body.get("query", "up")
     async with httpx.AsyncClient(verify=False, timeout=10) as client:
         resp = await client.get(f"{PROMETHEUS_URL}/api/v1/query", params={"query": query})
         return Response(
