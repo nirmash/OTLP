@@ -32,7 +32,6 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
 .node .stat .val.purple{color:var(--purple)}
 .node a{color:var(--blue);text-decoration:none;font-size:.75rem}
 .node a:hover{text-decoration:underline}
-/* Activity feed */
 .feed{position:fixed;bottom:0;left:0;right:0;height:140px;background:var(--card);border-top:1px solid var(--border);overflow:hidden}
 .feed-header{padding:8px 2rem;font-size:.8rem;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
 .feed-items{padding:6px 2rem;overflow-y:auto;height:100px;font-size:.75rem;line-height:1.6}
@@ -41,9 +40,6 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
 .feed-item .svc{color:var(--blue);min-width:100px}
 .feed-item .name{color:var(--fg)}
 .feed-item .dur{color:var(--orange);margin-left:auto}
-/* Animated dot */
-@keyframes flowDot{0%{offset-distance:0%}100%{offset-distance:100%}}
-.flow-dot{width:6px;height:6px;border-radius:50%;position:absolute;offset-rotate:0deg;animation:flowDot 2s linear infinite;opacity:.8}
 </style>
 </head>
 <body>
@@ -55,7 +51,6 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
 <div class="canvas-wrap" id="canvas">
   <svg class="connections" id="svg"></svg>
 
-  <!-- Nodes -->
   <div class="node" id="n-browser" style="top:8%;left:4%">
     <div class="icon">🌐</div>
     <div class="title">Browser (User)</div>
@@ -71,8 +66,8 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
     <div class="title">Home Finder App</div>
     <div class="subtitle">Embr · Flask · Python</div>
     <div class="stats">
-      <div class="stat"><span class="label">Chat Req</span><span class="val ok" id="v-chat-ok">—</span></div>
-      <div class="stat"><span class="label">Chat Errors</span><span class="val err" id="v-chat-err">—</span></div>
+      <div class="stat"><span class="label">Successful Chats</span><span class="val ok" id="v-chat-ok">—</span></div>
+      <div class="stat"><span class="label">Failed Chats</span><span class="val err" id="v-chat-err">—</span></div>
       <div class="stat"><span class="label">Avg Latency</span><span class="val warn" id="v-latency">—</span></div>
       <div class="stat"><span class="label">Interactions</span><span class="val blue" id="v-interactions">—</span></div>
     </div>
@@ -84,26 +79,27 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
     <div class="subtitle">refi-wizard · GPT-5.2</div>
     <div class="stats">
       <div class="stat"><span class="label">Success Rate</span><span class="val ok" id="v-success-rate">—</span></div>
-      <div class="stat"><span class="label">Avg Response</span><span class="val warn" id="v-agent-latency">—</span></div>
+      <div class="stat"><span class="label">Total Calls</span><span class="val blue" id="v-agent-calls">—</span></div>
+      <div class="stat"><span class="label">Errors</span><span class="val err" id="v-agent-errors">—</span></div>
     </div>
   </div>
 
   <div class="node" id="n-db" style="top:55%;left:4%">
-    <div class="icon">🗄️</div>
-    <div class="title">SQLite Database</div>
-    <div class="subtitle">Home listings · 8 records</div>
+    <div class="icon">🐘</div>
+    <div class="title">PostgreSQL</div>
+    <div class="subtitle">Home listings database</div>
     <div class="stats">
       <div class="stat"><span class="label">Cities Active</span><span class="val blue" id="v-cities">—</span></div>
-      <div class="stat"><span class="label">Avg Price</span><span class="val ok" id="v-avg-price">—</span></div>
+      <div class="stat"><span class="label">Avg Price Viewed</span><span class="val ok" id="v-avg-price">—</span></div>
     </div>
   </div>
 
   <div class="node" id="n-otlp" style="top:38%;left:55%">
     <div class="icon">📡</div>
     <div class="title">OTLP Collector</div>
-    <div class="subtitle">Traces · This app</div>
+    <div class="subtitle">Traces receiver · This app</div>
     <div class="stats">
-      <div class="stat"><span class="label">Traces Recv</span><span class="val purple" id="v-traces">—</span></div>
+      <div class="stat"><span class="label">Traces Received</span><span class="val purple" id="v-traces">—</span></div>
     </div>
   </div>
 
@@ -113,7 +109,7 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
     <div class="subtitle">Metrics storage · OTLP ingest</div>
     <div class="stats">
       <div class="stat"><span class="label">App Errors</span><span class="val err" id="v-app-errors">—</span></div>
-      <div class="stat"><span class="label">CPU</span><span class="val warn" id="v-cpu">—</span></div>
+      <div class="stat"><span class="label">CPU Usage</span><span class="val warn" id="v-cpu">—</span></div>
       <div class="stat"><span class="label">Memory</span><span class="val warn" id="v-mem">—</span></div>
     </div>
   </div>
@@ -124,7 +120,7 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
     <div class="subtitle">Dashboards · Alerts</div>
     <div class="stats">
       <div class="stat"><span class="label">Dashboards</span><span class="val blue">3</span></div>
-      <a href="https://production-grafana-embr-a006bc91.app.embr.azure" target="_blank">Open Grafana ↗</a>
+      <a href="https://production-grafana-embr-a006bc91.app.embr.azure/d/refi-wizard-agent" target="_blank">Open App Dashboard ↗</a>
     </div>
   </div>
 </div>
@@ -138,21 +134,41 @@ svg.connections{position:absolute;top:0;left:0;width:100%;height:100%;pointer-ev
 </div>
 
 <script>
-// ── Connection lines + animated dots ────────────────────────────────
+// ── Connections: direction and data-driven animation ────────────────
 const CONNECTIONS = [
-  {from:'n-browser',    to:'n-homefinder', color:'var(--blue)',   label:'HTTP'},
-  {from:'n-homefinder', to:'n-agent',      color:'var(--blue)',   label:'OpenAI API'},
-  {from:'n-homefinder', to:'n-db',         color:'var(--green)',  label:'SQL'},
-  {from:'n-homefinder', to:'n-otlp',       color:'var(--purple)', label:'OTLP Traces'},
-  {from:'n-homefinder', to:'n-prom',       color:'var(--green)',  label:'OTLP Metrics'},
-  {from:'n-prom',       to:'n-grafana',    color:'var(--orange)', label:'PromQL'},
+  {from:'n-browser',    to:'n-homefinder', color:'var(--blue)',   label:'HTTP',         bidir:true,  rateQuery:'sum(rate(chat_requests_total[5m]))'},
+  {from:'n-homefinder', to:'n-agent',      color:'var(--blue)',   label:'OpenAI API',   bidir:true,  rateQuery:'sum(rate(chat_requests_total[5m]))'},
+  {from:'n-homefinder', to:'n-db',         color:'var(--green)',  label:'SQL',          bidir:true,  rateQuery:'sum(rate(home_selections_total[5m]))'},
+  {from:'n-homefinder', to:'n-otlp',       color:'var(--purple)', label:'OTLP Traces',  bidir:false, rateQuery:null},
+  {from:'n-homefinder', to:'n-prom',       color:'var(--green)',  label:'OTLP Metrics', bidir:false, rateQuery:null},
+  {from:'n-prom',       to:'n-grafana',    color:'var(--orange)', label:'PromQL',       bidir:false, rateQuery:null},
 ];
+
+let connRates = {};  // keyed by index, stores last rate value
+let prevTraces = null;
+let prevMetricSnapshot = {};
 
 function getCenter(id) {
   const el = document.getElementById(id);
   const r = el.getBoundingClientRect();
   const p = el.parentElement.getBoundingClientRect();
   return {x: r.left - p.left + r.width/2, y: r.top - p.top + r.height/2};
+}
+
+function makeArrowHead(svg, id, color) {
+  let defs = svg.querySelector('defs') || svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg','defs'));
+  const marker = document.createElementNS('http://www.w3.org/2000/svg','marker');
+  marker.setAttribute('id', id);
+  marker.setAttribute('viewBox','0 0 10 10');
+  marker.setAttribute('refX','8'); marker.setAttribute('refY','5');
+  marker.setAttribute('markerWidth','6'); marker.setAttribute('markerHeight','6');
+  marker.setAttribute('orient','auto-start-reverse');
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d','M 0 0 L 10 5 L 0 10 z');
+  path.setAttribute('fill', color);
+  marker.appendChild(path);
+  defs.appendChild(marker);
+  return id;
 }
 
 function drawConnections() {
@@ -163,52 +179,102 @@ function drawConnections() {
 
   CONNECTIONS.forEach((c, i) => {
     const a = getCenter(c.from), b = getCenter(c.to);
-    const pathId = `path-${i}`;
+    const active = connRates[i] > 0;
+    const opacity = active ? 0.6 : 0.15;
+    const arrowId = `arrow-${i}`;
+    const arrowIdRev = `arrow-rev-${i}`;
 
-    // Line
-    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-    line.setAttribute('x1',a.x); line.setAttribute('y1',a.y);
-    line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
-    line.setAttribute('stroke',c.color); line.setAttribute('stroke-width','1.5');
-    line.setAttribute('stroke-opacity','0.3'); line.setAttribute('stroke-dasharray','6,4');
-    svg.appendChild(line);
+    // Arrow markers
+    makeArrowHead(svg, arrowId, c.color);
+    if (c.bidir) makeArrowHead(svg, arrowIdRev, c.color);
 
-    // Path for dot animation
-    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('id', pathId);
-    path.setAttribute('d', `M${a.x},${a.y} L${b.x},${b.y}`);
-    path.setAttribute('fill','none');
-    defs.appendChild(path);
+    // Offset for bidirectional lines
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const nx = -dy/len * 4, ny = dx/len * 4;
 
-    // Animated dot
-    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    circle.setAttribute('r','4');
-    circle.setAttribute('fill',c.color);
-    circle.setAttribute('opacity','0.8');
-    const anim = document.createElementNS('http://www.w3.org/2000/svg','animateMotion');
-    anim.setAttribute('dur', (1.5 + i * 0.3) + 's');
-    anim.setAttribute('repeatCount','indefinite');
-    const mpath = document.createElementNS('http://www.w3.org/2000/svg','mpath');
-    mpath.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pathId);
-    anim.appendChild(mpath);
-    circle.appendChild(anim);
-    svg.appendChild(circle);
+    if (c.bidir) {
+      // Forward line (top)
+      const l1 = document.createElementNS('http://www.w3.org/2000/svg','line');
+      l1.setAttribute('x1',a.x+nx); l1.setAttribute('y1',a.y+ny);
+      l1.setAttribute('x2',b.x+nx); l1.setAttribute('y2',b.y+ny);
+      l1.setAttribute('stroke',c.color); l1.setAttribute('stroke-width','1.5');
+      l1.setAttribute('stroke-opacity', opacity);
+      l1.setAttribute('marker-end',`url(#${arrowId})`);
+      svg.appendChild(l1);
+      // Reverse line (bottom)
+      const l2 = document.createElementNS('http://www.w3.org/2000/svg','line');
+      l2.setAttribute('x1',b.x-nx); l2.setAttribute('y1',b.y-ny);
+      l2.setAttribute('x2',a.x-nx); l2.setAttribute('y2',a.y-ny);
+      l2.setAttribute('stroke',c.color); l2.setAttribute('stroke-width','1.5');
+      l2.setAttribute('stroke-opacity', opacity);
+      l2.setAttribute('marker-end',`url(#${arrowIdRev})`);
+      svg.appendChild(l2);
+    } else {
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',a.x); line.setAttribute('y1',a.y);
+      line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
+      line.setAttribute('stroke',c.color); line.setAttribute('stroke-width','1.5');
+      line.setAttribute('stroke-opacity', opacity);
+      line.setAttribute('marker-end',`url(#${arrowId})`);
+      svg.appendChild(line);
+    }
 
-    // Label at midpoint
+    // Animated dots only if active
+    if (active) {
+      const pathId = `path-${i}`;
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('id', pathId);
+      path.setAttribute('d', `M${a.x},${a.y} L${b.x},${b.y}`);
+      path.setAttribute('fill','none');
+      defs.appendChild(path);
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      circle.setAttribute('r','3');
+      circle.setAttribute('fill',c.color);
+      const anim = document.createElementNS('http://www.w3.org/2000/svg','animateMotion');
+      anim.setAttribute('dur', (1.5 + i * 0.2) + 's');
+      anim.setAttribute('repeatCount','indefinite');
+      const mpath = document.createElementNS('http://www.w3.org/2000/svg','mpath');
+      mpath.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pathId);
+      anim.appendChild(mpath);
+      circle.appendChild(anim);
+      svg.appendChild(circle);
+
+      if (c.bidir) {
+        const pathIdRev = `path-rev-${i}`;
+        const pathRev = document.createElementNS('http://www.w3.org/2000/svg','path');
+        pathRev.setAttribute('id', pathIdRev);
+        pathRev.setAttribute('d', `M${b.x},${b.y} L${a.x},${a.y}`);
+        pathRev.setAttribute('fill','none');
+        defs.appendChild(pathRev);
+        const c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c2.setAttribute('r','3'); c2.setAttribute('fill',c.color); c2.setAttribute('opacity','0.6');
+        const a2 = document.createElementNS('http://www.w3.org/2000/svg','animateMotion');
+        a2.setAttribute('dur', (1.8 + i * 0.2) + 's');
+        a2.setAttribute('repeatCount','indefinite');
+        const mp2 = document.createElementNS('http://www.w3.org/2000/svg','mpath');
+        mp2.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pathIdRev);
+        a2.appendChild(mp2);
+        c2.appendChild(a2);
+        svg.appendChild(c2);
+      }
+    }
+
+    // Label
     const mid = {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
     const text = document.createElementNS('http://www.w3.org/2000/svg','text');
-    text.setAttribute('x', mid.x);
-    text.setAttribute('y', mid.y - 8);
+    text.setAttribute('x', mid.x); text.setAttribute('y', mid.y - 10);
     text.setAttribute('text-anchor','middle');
     text.setAttribute('fill', c.color);
     text.setAttribute('font-size','10');
-    text.setAttribute('opacity','0.6');
+    text.setAttribute('opacity', active ? '0.7' : '0.3');
     text.textContent = c.label;
     svg.appendChild(text);
   });
 }
 
-// ── Data fetching ───────────────────────────────────────────────────
+// ── Data ────────────────────────────────────────────────────────────
 async function promQuery(q) {
   try {
     const r = await fetch(`/api/prometheus?query=${encodeURIComponent(q)}`);
@@ -220,14 +286,15 @@ async function promQuery(q) {
   } catch { return null; }
 }
 
-function fmt(n, dec=0) { return n != null ? n.toLocaleString(undefined, {maximumFractionDigits:dec}) : '—'; }
-function fmtMs(n) { return n != null ? (n > 1000 ? (n/1000).toFixed(1)+'s' : n.toFixed(0)+'ms') : '—'; }
-function fmtBytes(b) { if(b==null)return '—'; if(b>1e9)return(b/1e9).toFixed(1)+'GB'; if(b>1e6)return(b/1e6).toFixed(0)+'MB'; return(b/1e3).toFixed(0)+'KB'; }
-function fmtPct(n) { return n != null ? (n*100).toFixed(1)+'%' : '—'; }
+function fmt(n) { return n != null && !isNaN(n) ? Math.round(n).toLocaleString() : '—'; }
+function fmtMs(n) { return n != null && !isNaN(n) ? (n > 1000 ? (n/1000).toFixed(1)+'s' : Math.round(n)+'ms') : '—'; }
+function fmtBytes(b) { if(b==null||isNaN(b))return '—'; if(b>1e9)return(b/1e9).toFixed(1)+'GB'; if(b>1e6)return(b/1e6).toFixed(0)+'MB'; return(b/1e3).toFixed(0)+'KB'; }
+function fmtPct(n) { return n != null && !isNaN(n) ? Math.min(n*100,100).toFixed(1)+'%' : '—'; }
+function fmtPrice(n) { return n != null && !isNaN(n) ? '$'+Math.round(n).toLocaleString() : '—'; }
 
 async function refresh() {
   const [chatOk, chatErr, latency, interactions, selections, avgPrice, cities,
-         errors, cpu, mem, traces, successRate] = await Promise.all([
+         errors, cpu, mem, traces, totalChats, chatRate, selRate] = await Promise.all([
     promQuery('sum(chat_requests_total{status="success"})'),
     promQuery('sum(chat_requests_total{status="error"})'),
     promQuery('chat_latency_ms_sum/chat_latency_ms_count'),
@@ -239,26 +306,46 @@ async function refresh() {
     promQuery('rate(sandbox_cpu_usage_seconds_total[5m])'),
     promQuery('sandbox_memory_usage_bytes'),
     fetch('/api/stats').then(r=>r.json()).catch(()=>({traces:0})),
-    promQuery('sum(chat_requests_total{status="success"})/sum(chat_requests_total)'),
+    promQuery('sum(chat_requests_total)'),
+    promQuery('sum(rate(chat_requests_total[5m]))'),
+    promQuery('sum(rate(home_selections_total[5m]))'),
   ]);
 
-  const totalReq = (chatOk||0) + (chatErr||0);
-  document.getElementById('v-total-req').textContent = fmt(totalReq);
+  // Compute success rate properly
+  const total = (chatOk||0) + (chatErr||0);
+  const successRate = total > 0 ? (chatOk||0) / total : null;
+
+  // Update node stats
+  document.getElementById('v-total-req').textContent = fmt(total);
   document.getElementById('v-total-sel').textContent = fmt(selections);
   document.getElementById('v-chat-ok').textContent = fmt(chatOk);
   document.getElementById('v-chat-err').textContent = fmt(chatErr);
   document.getElementById('v-latency').textContent = fmtMs(latency);
   document.getElementById('v-interactions').textContent = fmt(interactions);
   document.getElementById('v-success-rate').textContent = fmtPct(successRate);
-  document.getElementById('v-agent-latency').textContent = fmtMs(latency);
+  document.getElementById('v-agent-calls').textContent = fmt(total);
+  document.getElementById('v-agent-errors').textContent = fmt(chatErr);
   document.getElementById('v-cities').textContent = fmt(cities);
-  document.getElementById('v-avg-price').textContent = avgPrice ? '$'+fmt(avgPrice) : '—';
+  document.getElementById('v-avg-price').textContent = fmtPrice(avgPrice);
   document.getElementById('v-app-errors').textContent = fmt(errors);
   document.getElementById('v-cpu').textContent = cpu != null ? cpu.toFixed(3)+' cores' : '—';
   document.getElementById('v-mem').textContent = fmtBytes(mem);
   document.getElementById('v-traces').textContent = fmt(traces.traces);
 
-  // Update feed
+  // Determine which connections are active (have real data flowing)
+  const tracesChanged = prevTraces !== null && traces.traces !== prevTraces;
+  prevTraces = traces.traces;
+
+  connRates[0] = (chatRate && chatRate > 0) ? chatRate : 0;  // browser→app
+  connRates[1] = (chatRate && chatRate > 0) ? chatRate : 0;  // app→agent
+  connRates[2] = (selRate && selRate > 0) ? selRate : 0;     // app→db
+  connRates[3] = tracesChanged ? 1 : 0;                       // app→otlp
+  connRates[4] = (chatRate && chatRate > 0) ? chatRate : 0;  // app→prom (metrics always flow with requests)
+  connRates[5] = connRates[4];                                // prom→grafana
+
+  drawConnections();
+
+  // Activity feed
   try {
     const tr = await fetch('/api/telemetry?kind=traces&limit=10');
     const data = await tr.json();
@@ -279,7 +366,6 @@ async function refresh() {
   } catch {}
 }
 
-// ── Init ────────────────────────────────────────────────────────────
 window.addEventListener('load', () => { drawConnections(); refresh(); });
 window.addEventListener('resize', drawConnections);
 setInterval(refresh, 3000);
