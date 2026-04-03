@@ -3,6 +3,7 @@
 import ssl
 import json as json_mod
 import urllib.request
+import threading
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -22,14 +23,14 @@ def _content_type(request: Request) -> str:
     return PROTO_CT if "protobuf" in ct else JSON_CT
 
 
-# ── OTLP ingest endpoints ──────────────────────────────────────────
+# ── OTLP ingest endpoints (fire-and-forget to avoid blocking) ───────
 
 @app.post("/v1/traces")
 async def ingest_traces(request: Request):
     body = await request.body()
     ct = _content_type(request)
     resource_spans = decode_traces(body, ct)
-    store.add_traces(resource_spans)
+    threading.Thread(target=store.add_traces, args=(resource_spans,), daemon=True).start()
     return Response(
         content=encode_trace_response(ct),
         media_type=ct,
@@ -41,7 +42,7 @@ async def ingest_metrics(request: Request):
     body = await request.body()
     ct = _content_type(request)
     resource_metrics = decode_metrics(body, ct)
-    store.add_metrics(resource_metrics)
+    threading.Thread(target=store.add_metrics, args=(resource_metrics,), daemon=True).start()
     return Response(
         content=encode_metrics_response(ct),
         media_type=ct,
@@ -53,7 +54,7 @@ async def ingest_logs(request: Request):
     body = await request.body()
     ct = _content_type(request)
     resource_logs = decode_logs(body, ct)
-    store.add_logs(resource_logs)
+    threading.Thread(target=store.add_logs, args=(resource_logs,), daemon=True).start()
     return Response(
         content=encode_logs_response(ct),
         media_type=ct,
