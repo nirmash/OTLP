@@ -122,3 +122,12 @@ async def viz2():
 @app.get("/viz3.html")
 async def viz3():
     return FileResponse("static/viz3.html")
+
+
+@app.get("/arch.html")
+async def arch():
+    return FileResponse("static/arch.html", headers={
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    })
