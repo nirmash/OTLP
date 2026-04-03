@@ -30,7 +30,7 @@ async def ingest_traces(request: Request):
     body = await request.body()
     ct = _content_type(request)
     resource_spans = decode_traces(body, ct)
-    threading.Thread(target=store.add_traces, args=(resource_spans,), daemon=True).start()
+    store.add_traces(resource_spans)
     return Response(
         content=encode_trace_response(ct),
         media_type=ct,
@@ -42,7 +42,7 @@ async def ingest_metrics(request: Request):
     body = await request.body()
     ct = _content_type(request)
     resource_metrics = decode_metrics(body, ct)
-    threading.Thread(target=store.add_metrics, args=(resource_metrics,), daemon=True).start()
+    store.add_metrics(resource_metrics)
     return Response(
         content=encode_metrics_response(ct),
         media_type=ct,
@@ -54,7 +54,7 @@ async def ingest_logs(request: Request):
     body = await request.body()
     ct = _content_type(request)
     resource_logs = decode_logs(body, ct)
-    threading.Thread(target=store.add_logs, args=(resource_logs,), daemon=True).start()
+    store.add_logs(resource_logs)
     return Response(
         content=encode_logs_response(ct),
         media_type=ct,
